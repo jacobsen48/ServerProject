@@ -22,10 +22,53 @@ def parse_args():
     return parser.parse_args()
 
 
+def gestione_richiesta(socket_c, base_d):
+    """Funzione per la gestione della richiesta"""
+    dato_richiesto = socket_c.recv(1024).decode("utf-8")
+    print("dato_richiesto:", dato_richiesto)
+    linea_richiesta = dato_richiesto.split("\n")
+    linea_richiesta = linea_richiesta[0]
+    metodo, percorso, protocollo = linea_richiesta.strip().split()
+    print("metodo:", metodo)
+    print("percorso:", percorso)
+    print("protocollo:", protocollo)
+
+    if metodo != "GET":
+        risposta = "HTTP/1.1 501 non implementato\n\nMetodo non implementato"
+    else:
+        if percorso == "/":
+            percorso = "/index.html"
+
+        percorso_file = os.path.join(base_d, percorso.lstrip("/"))
+
+        if os.path.exists(percorso_file):
+            with open(percorso_file, "rb") as file:
+                contenuto_risposta = file.read()
+            risposta = (
+                "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"
+                + contenuto_risposta.decode("utf-8")
+            )
+        else:
+            risposta = "HTTP/1.1 404 Non trovato\n\nFile non trovato"
+
+        socket_c.send(risposta.encode("utf-8"))
+        socket_c.close()
+
+
 def main():
     """Definizione della funzione main"""
     args = parse_args()
-    print("Questa è una prova del parser")
+    base_directory = args.base
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(("127.0.0.1", args.port))
+    server_socket.listen(1)
+
+    print(f"Server in ascolto su http//127.0.0.1:{args.port}/")
+
+    while True:
+        client_socket, client_address = server_socket.accept()
+        print(f"Connessione da: {client_address}")
+        gestione_richiesta(client_socket, base_directory)
 
 
 if __name__ == "__main__":
