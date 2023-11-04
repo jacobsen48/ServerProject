@@ -25,7 +25,6 @@ def parse_args():
 def gestione_richiesta(socket_c, base_d):
     """Funzione per la gestione della richiesta"""
     dato_richiesto = socket_c.recv(1024).decode("utf-8")
-    print("dato_richiesto:", dato_richiesto)
     linea_richiesta = dato_richiesto.split("\n")
     linea_richiesta = linea_richiesta[0]
     metodo, percorso, protocollo = linea_richiesta.strip().split()
@@ -61,6 +60,7 @@ def main():
     base_directory = args.base
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(("127.0.0.1", args.port))
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.listen(1)
 
     print(f"Server in ascolto su http//127.0.0.1:{args.port}/")
@@ -72,5 +72,4 @@ def main():
 
 
 if __name__ == "__main__":
-    """Parte principale"""
     main()
