@@ -40,15 +40,60 @@ def gestione_richiesta(socket_c, base_d):
 
         percorso_file = os.path.join(base_d, percorso.lstrip("/"))
 
-        if os.path.exists(percorso_file):
-            with open(percorso_file, "rb") as file:
-                contenuto_risposta = file.read()
-            risposta = (
-                "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"
-                + contenuto_risposta.decode("utf-8")
+        if percorso.endswith(".css"):
+            # Gestisci i file CSS
+            if os.path.exists(percorso_file):
+                with open(percorso_file, "rb") as file:
+                    contenuto_risposta = file.read()
+                risposta = (
+                    "HTTP/1.1 200 OK\nContent-Type: text/css\n\n"
+                    + contenuto_risposta.decode("utf-8")
+                )
+            else:
+                risposta = "HTTP/1.1 404 Non Trovato\n\nFile CSS non trovato"
+
+        elif percorso.endswith(".js"):
+            # Gestisci i file javascript
+            if os.path.exists(percorso_file):
+                with open(percorso_file, "rb") as file:
+                    contenuto_risposta = file.read()
+                risposta = (
+                    "HTTP/1.1 200 OK\nContent-Type: application/javascript\n\n"
+                    + contenuto_risposta.decode("utf-8")
+                )
+            else:
+                risposta = "HTTP/1.1 404 Non Trovato\n\nFile JavaScript non trovato"
+
+        elif percorso.endswith((".jpg", ".jpeg", ".png", ".gif")):
+            # Gestisci i file delle immagini
+            content_type = (
+                "image/jpeg"
+                if percorso.endswith((".jpg", ".jpeg"))
+                else "image/png"
+                if percorso.endswith(".png")
+                else "image/gif"
             )
+
+            if os.path.exists(percorso_file):
+                with open(percorso_file, "rb") as file:
+                    contenuto_risposta = file.read()
+                risposta = f"HTTP/1.1 200 OK\nContent-Type: {content_type}\n\n"
+                socket_c.send(risposta.encode("utf-8"))
+                socket_c.send(contenuto_risposta)
+            else:
+                risposta = "HTTP/1.1 404 Non trovato\n\nFile immagine non trovato"
+                socket_c.send(risposta.encode("utf-8"))
+
         else:
-            risposta = "HTTP/1.1 404 Non trovato\n\nFile non trovato"
+            if os.path.exists(percorso_file):
+                with open(percorso_file, "rb") as file:
+                    contenuto_risposta = file.read()
+                risposta = (
+                    "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"
+                    + contenuto_risposta.decode("utf-8")
+                )
+            else:
+                risposta = "HTTP/1.1 404 Non trovato\n\nFile non trovato"
 
         socket_c.send(risposta.encode("utf-8"))
         socket_c.close()
